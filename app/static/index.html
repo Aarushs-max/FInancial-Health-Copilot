@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Health Copilot | HackMatrix 5.0 (FIN-02)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col min-h-screen">
+
+    <!-- Top Navigation & Hackathon Header -->
+    <header class="glass-header sticky top-0 z-40 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg font-bold tracking-tight text-white" data-i18n="app_title">Financial Health Copilot</h1>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">HackMatrix 5.0 • FIN-02 • PCCOE Pune</span>
+                </div>
+                <p class="text-xs text-slate-400" data-i18n="tagline">SDG-8 & SDG-10 • True Disposable Affordability & Cash-Flow Guard</p>
+            </div>
+        </div>
+
+        <!-- Language Switcher + Persona Switcher + Global Actions -->
+        <div class="flex items-center flex-wrap gap-2.5">
+            <!-- Language Selector (English | हिन्दी | मराठी) -->
+            <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg p-1 text-xs">
+                <span class="px-2 text-slate-400 font-medium">🌐</span>
+                <button onclick="switchLanguage('en')" id="lang-btn-en" class="px-2.5 py-1 rounded font-bold bg-sky-600 text-white transition">English</button>
+                <button onclick="switchLanguage('hi')" id="lang-btn-hi" class="px-2.5 py-1 rounded font-medium text-slate-400 hover:text-white transition">हिन्दी</button>
+                <button onclick="switchLanguage('mr')" id="lang-btn-mr" class="px-2.5 py-1 rounded font-medium text-slate-400 hover:text-white transition">मराठी</button>
+            </div>
+
+            <!-- Persona Switcher -->
+            <div class="flex items-center bg-slate-900 border border-slate-700/60 rounded-lg p-1 text-xs">
+                <span class="px-2 text-slate-400 font-medium" data-i18n="demo_persona">Persona:</span>
+                <button onclick="switchPersona('rohan')" id="btn-persona-rohan" class="px-2.5 py-1 rounded font-medium transition text-slate-300 hover:text-white">Rohan</button>
+                <button onclick="switchPersona('priya')" id="btn-persona-priya" class="px-2.5 py-1 rounded font-medium transition text-slate-300 hover:text-white">Priya</button>
+                <button onclick="switchPersona('amit')" id="btn-persona-amit" class="px-2.5 py-1 rounded font-medium transition text-slate-300 hover:text-white">Amit</button>
+            </div>
+
+            <!-- Account Aggregator Simulation Button -->
+            <button onclick="openAAModal()" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition">
+                <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                <span id="aa-status-badge" data-i18n="link_account">Link Account (AA Sandbox)</span>
+            </button>
+
+            <!-- Manual Add Transaction -->
+            <button onclick="openTxModal()" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white shadow-sm transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span data-i18n="add_expense">Add Expense</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+        <!-- 7-Day Forward Cash-Flow Warning Banner (Dynamic) -->
+        <div id="cashflow-banner-container"></div>
+
+        <!-- Profile Bar & Voice Copilot Quick Banner -->
+        <div class="glass-card p-4 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-slate-900/90 to-slate-800/80">
+            <div class="flex items-center gap-4">
+                <div class="h-12 w-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-sky-400 text-lg" id="profile-initials">
+                    RM
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold text-white" id="profile-name">Rohan Mehta</h2>
+                        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700" id="profile-occupation">Senior Consultant</span>
+                        <span class="text-xs text-slate-400" id="profile-city">• Bengaluru, KA</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5" id="profile-summary-tag">High Earner, High Burn Trap (Exposes flaws in generic 20% percentage rules)</p>
+                </div>
+            </div>
+
+            <!-- Voice Copilot Assistant Widget -->
+            <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2">
+                <button id="mic-btn" onclick="toggleVoiceQuery()" class="h-9 w-9 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 flex items-center justify-center transition">
+                    <i data-lucide="mic" id="mic-icon" class="w-4 h-4"></i>
+                </button>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-semibold text-white" data-i18n="voice_copilot">Voice Copilot</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-sky-900/60 text-sky-300 font-mono" id="voice-lang-tag">en-IN</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400" id="voice-status-text" data-i18n="voice_hint">Click mic or test: 'Can I afford 5,000?'</p>
+                </div>
+                <button onclick="playVoiceSummary()" title="Speak Copilot Verdict" class="text-slate-400 hover:text-sky-300 p-1">
+                    <i data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Core Financial Health KPI Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- 1. Monthly Inflow -->
+            <div class="glass-card p-4">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-xs font-medium uppercase tracking-wider" data-i18n="monthly_income">Monthly Income</span>
+                    <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+                <div class="text-xl font-bold text-white" id="kpi-income">₹1,25,000</div>
+                <div class="text-[11px] text-slate-400 mt-1" data-i18n="verified_salary">Verified salary credit</div>
+            </div>
+
+            <!-- 2. Fixed Commitments (Debt/Rent) -->
+            <div class="glass-card p-4">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-xs font-medium uppercase tracking-wider" data-i18n="fixed_obligations">Fixed Obligations</span>
+                    <i data-lucide="landmark" class="w-4 h-4 text-rose-400"></i>
+                </div>
+                <div class="text-xl font-bold text-white" id="kpi-fixed">₹57,500</div>
+                <div class="text-[11px] text-slate-400 mt-1" data-i18n="fixed_desc">Rent, Car EMI, Insurance</div>
+            </div>
+
+            <!-- 3. Discretionary Lifestyle Burn -->
+            <div class="glass-card p-4">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-xs font-medium uppercase tracking-wider" data-i18n="lifestyle_spend">Lifestyle Spend</span>
+                    <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-400"></i>
+                </div>
+                <div class="text-xl font-bold text-white" id="kpi-lifestyle">₹57,500</div>
+                <div class="text-[11px] text-slate-400 mt-1" data-i18n="lifestyle_desc">Dining, CC bill, leisure</div>
+            </div>
+
+            <!-- 4. True Disposable Income (Differentiator) -->
+            <div class="glass-card p-4 border-sky-500/40 bg-sky-950/20">
+                <div class="flex items-center justify-between text-slate-300 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400" data-i18n="disposable_surplus">Disposable Surplus</span>
+                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
+                </div>
+                <div class="text-xl font-black text-sky-300" id="kpi-disposable">₹10,000</div>
+                <div class="text-[11px] text-sky-400/80 mt-1 font-medium" data-i18n="investable_capacity">True investable capacity</div>
+            </div>
+
+            <!-- 5. Emergency Fund Coverage -->
+            <div class="glass-card p-4">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-xs font-medium uppercase tracking-wider" data-i18n="emergency_buffer">Emergency Buffer</span>
+                    <i data-lucide="life-buoy" class="w-4 h-4 text-indigo-400"></i>
+                </div>
+                <div class="text-xl font-bold text-white" id="kpi-emergency">0.5 Months</div>
+                <div class="text-[11px] text-slate-400 mt-1" id="kpi-savings">₹32,000 liquid</div>
+            </div>
+        </div>
+
+        <!-- NEW FEATURE: FinCopilot Interactive Chatbot Panel -->
+        <div class="glass-card p-6 border-indigo-500/30 bg-gradient-to-b from-slate-900/90 to-slate-950/90 shadow-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span data-i18n="chat_title">FinCopilot Assistant</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Context-Aware AI</span>
+                        </h3>
+                        <p class="text-xs text-slate-400" data-i18n="chat_subtitle">Ask any question about affordability, upcoming bills, or loans in English, हिन्दी, or मराठी.</p>
+                    </div>
+                </div>
+
+                <!-- Active language badge inside chat -->
+                <span class="text-[11px] text-slate-400 font-mono bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700" id="chat-lang-indicator">
+                    Language: English
+                </span>
+            </div>
+
+            <!-- Quick Prompt Suggestions (Scenario Chips) -->
+            <div class="space-y-1.5">
+                <span class="text-[11px] font-semibold text-slate-400" data-i18n="quick_prompts_title">Suggested Scenarios:</span>
+                <div class="flex flex-wrap gap-2" id="quick-prompt-chips">
+                    <button onclick="triggerQuickPrompt('Can I afford ₹8,000 SIP?')" class="prompt-chip" data-i18n="prompt_chip_1">Can I afford ₹8,000 SIP?</button>
+                    <button onclick="triggerQuickPrompt('Can I buy a ₹40,000 phone on 6-mo EMI?')" class="prompt-chip" data-i18n="prompt_chip_2">Can I buy a ₹40,000 phone on 6-mo EMI?</button>
+                    <button onclick="triggerQuickPrompt('Why is my 7-day cash flow at risk?')" class="prompt-chip" data-i18n="prompt_chip_3">Why is my 7-day cash flow at risk?</button>
+                    <button onclick="triggerQuickPrompt('What if I cut dining out by 30%?')" class="prompt-chip" data-i18n="prompt_chip_4">What if I cut dining out by 30%?</button>
+                </div>
+            </div>
+
+            <!-- Chat Message Feed -->
+            <div id="chat-messages" class="h-64 overflow-y-auto custom-scroll space-y-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+                <!-- Dynamically filled by app.js -->
+            </div>
+
+            <!-- Chat Input Bar -->
+            <form onsubmit="handleChatSubmit(event)" class="flex items-center gap-2 pt-1">
+                <div class="relative flex-1">
+                    <input type="text" id="chat-input" placeholder="Ask: 'Can I afford a ₹30,000 phone on EMI?' or 'Explain my bills'" data-i18n-ph="chat_placeholder" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 transition shadow-lg shadow-indigo-600/20">
+                    <span data-i18n="chat_send">Send</span>
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Core Differentiator: Interactive Affordability Simulator -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left: Affordability Gauge & Simulator (7 Cols) -->
+            <div class="lg:col-span-7 glass-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <span class="text-xs font-bold text-sky-400 uppercase tracking-widest" data-i18n="core_innovation">Core Innovation</span>
+                            <h3 class="text-lg font-bold text-white" data-i18n="affordability_title">Dynamic Affordability & Buffer Calibrator</h3>
+                            <p class="text-xs text-slate-400" data-i18n="affordability_subtitle">Tests if an investment eats too far into real disposable margin.</p>
+                        </div>
+                        <span id="risk-badge" class="px-3 py-1 rounded-full text-xs font-bold tracking-wide badge-reco">
+                            Safe & Affordable
+                        </span>
+                    </div>
+
+                    <!-- Slider Control -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 my-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-medium text-slate-300" data-i18n="proposed_investment">Proposed Monthly Investment (SIP / Recurring):</label>
+                            <div class="flex items-center gap-1 font-mono text-base font-bold text-white bg-slate-800 px-3 py-1 rounded-lg border border-slate-700">
+                                <span>₹</span>
+                                <input type="number" id="investment-input" value="5000" min="500" max="50000" step="500" class="bg-transparent w-20 text-right focus:outline-none" oninput="onAmountChanged(this.value)">
+                            </div>
+                        </div>
+
+                        <input type="range" id="investment-slider" min="500" max="50000" step="500" value="5000" class="w-full" oninput="onAmountChanged(this.value)">
+                        
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>₹500</span>
+                            <span>₹10,000</span>
+                            <span>₹25,000</span>
+                            <span>₹50,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Affordability Breakdown & Math Verification -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold" data-i18n="disposable_surplus">Disposable Surplus</span>
+                            <div class="text-sm font-bold text-slate-200 mt-0.5" id="calc-disposable">₹10,000</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold" data-i18n="remaining_buffer">Remaining Buffer</span>
+                            <div class="text-sm font-bold text-emerald-400 mt-0.5" id="calc-buffer">₹5,000</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold" data-i18n="buffer_drain">Buffer Drain</span>
+                            <div class="text-sm font-bold text-slate-200 mt-0.5" id="calc-drain">50%</div>
+                        </div>
+                    </div>
+
+                    <!-- Copilot Reasoning Banner -->
+                    <div class="p-3.5 rounded-xl border border-slate-700/80 bg-slate-900/90 space-y-1" id="rationale-box">
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-200" id="rationale-headline">
+                            <i data-lucide="info" class="w-4 h-4 text-sky-400"></i>
+                            <span>Comfortable Buffer Preserved</span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed" id="rationale-detail">
+                            Evaluating real-time affordability against linked account data...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Safe Recommended Ceiling Footer -->
+                <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <span data-i18n="safe_ceiling">Copilot Calibrated Safe Monthly Ceiling:</span>
+                    <span class="font-bold text-emerald-400 text-sm" id="calc-ceiling">₹4,000/mo</span>
+                </div>
+            </div>
+
+            <!-- Right: Impact Projection Visualizer (5 Cols) -->
+            <div class="lg:col-span-5 glass-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest" data-i18n="expected_impact">Expected Impact</span>
+                            <h3 class="text-lg font-bold text-white" data-i18n="compound_trajectory">Compound Growth Trajectory</h3>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono">1, 3, 5, 10 Yrs</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3" data-i18n="trajectory_subtitle">Comparing 12% Equity SIP, 6.5% Conservative Debt, and 0% Cash mattress.</p>
+
+                    <!-- Chart Canvas -->
+                    <div class="relative h-56 w-full">
+                        <canvas id="projectionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Regulatory Disclaimer -->
+                <div class="mt-3 pt-2 text-[10px] text-slate-500 border-t border-slate-800 leading-tight">
+                    * Projections illustrate compound growth formulas. Market returns are not guaranteed. Guidance only, not SEBI-registered advice.
+                </div>
+            </div>
+        </div>
+
+        <!-- Explainability & Cognitive Provenance Section -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">Transparency & Trust</span>
+                    <h3 class="text-lg font-bold text-white" data-i18n="transparency_title">Explainability Audit & Cognitive Provenance</h3>
+                    <p class="text-xs text-slate-400" data-i18n="transparency_subtitle">Every insight is explicitly classified into observed facts, model predictions, or recommendations.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="badge-fact px-2 py-0.5 rounded font-mono font-semibold text-[10px]">OBSERVED FACT</span>
+                    <span class="badge-pred px-2 py-0.5 rounded font-mono font-semibold text-[10px]">MODEL PREDICTION</span>
+                    <span class="badge-reco px-2 py-0.5 rounded font-mono font-semibold text-[10px]">RECOMMENDATION</span>
+                </div>
+            </div>
+
+            <!-- Provenance Card Stream -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="explainability-feed">
+                <!-- Dynamically populated via app.js -->
+            </div>
+        </div>
+
+        <!-- Recent Transactions Table & Manual Ingestion Proof -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-white" data-i18n="linked_transactions">Linked Financial Transactions</h3>
+                    <p class="text-xs text-slate-400" data-i18n="transactions_subtitle">Ingested via simulated Account Aggregator & verified recurring commitments.</p>
+                </div>
+                <span class="text-xs text-slate-400 font-mono" id="tx-count-badge">7 transactions active</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/80 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Description</th>
+                            <th class="py-2.5 px-3">Category</th>
+                            <th class="py-2.5 px-3">Type</th>
+                            <th class="py-2.5 px-3">Due / Date</th>
+                            <th class="py-2.5 px-3 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaction-rows" class="divide-y divide-slate-800/60 font-medium">
+                        <!-- Dynamically filled -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Vision & Disclaimer Footer -->
+        <footer class="pt-6 border-t border-slate-800/80 text-xs text-slate-500 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <span>HackMatrix 5.0 (FIN-02) • SDG 8 (Decent Work & Economic Growth) • SDG 10 (Reduced Inequalities)</span>
+                <span class="text-slate-400">Production Vision: Self-Hosted Confidential AI Model for Zero Financial Data Leakage</span>
+            </div>
+            <p class="text-[11px] text-slate-600 leading-relaxed">
+                Disclaimer: Financial Health Copilot is an educational decision-support prototype. It does not solicit securities or offer registered investment advisory (RIA) services under SEBI (Investment Advisers) Regulations, 2013.
+            </p>
+        </footer>
+
+    </main>
+
+    <!-- Modal 1: Account Aggregator Simulation (Setu / Finvu Mock) -->
+    <div id="aa-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 border-slate-700 bg-slate-900 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shield" class="w-5 h-5 text-emerald-400"></i>
+                    <h4 class="font-bold text-white">Account Aggregator Sandbox</h4>
+                </div>
+                <button onclick="closeAAModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Step 1: Request -->
+            <div id="aa-step-1" class="space-y-3">
+                <p class="text-xs text-slate-300">
+                    Experience RBI Account Aggregator protocol (Setu/Finvu simulation). Consolidate bank accounts securely without screen-scraping or sharing passwords.
+                </p>
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1">Registered Mobile Number:</label>
+                    <input type="text" id="aa-mobile" value="9876543210" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] text-slate-400 block">Select Financial Information Providers (FIPs):</label>
+                    <div class="space-y-1.5 text-xs text-slate-300">
+                        <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-sky-500"> HDFC Bank Ltd (Salary A/c)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-sky-500"> State Bank of India (Savings)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-sky-500"> ICICI Bank</label>
+                    </div>
+                </div>
+                <button onclick="sendAAOTP()" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
+                    Request AA Consent & Send OTP
+                </button>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div id="aa-step-2" class="space-y-3 hidden">
+                <div class="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-lg text-xs text-emerald-300">
+                    Consent Request initiated: <span id="aa-consent-id" class="font-mono font-bold"></span>.<br>
+                    Mock OTP has been dispatched to your device.
+                </div>
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1">Enter OTP (Sandbox default: <strong class="text-white">4521</strong>):</label>
+                    <input type="text" id="aa-otp" value="4521" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono tracking-widest text-center focus:outline-none focus:border-emerald-500">
+                </div>
+                <button onclick="verifyAAOTP()" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
+                    Approve Consent & Ingest Financial Data
+                </button>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div id="aa-step-3" class="space-y-3 hidden text-center py-4">
+                <div class="h-12 w-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto">
+                    <i data-lucide="check" class="w-6 h-6"></i>
+                </div>
+                <h5 class="text-sm font-bold text-white">Accounts Linked via Account Aggregator</h5>
+                <p class="text-xs text-slate-400">Digitally signed FI data stream active. Dashboard metrics live updated.</p>
+                <button onclick="closeAAModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg">
+                    Return to Copilot
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Manual Expense Addition Modal -->
+    <div id="tx-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 border-slate-700 bg-slate-900 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-sky-400"></i>
+                    <h4 class="font-bold text-white">Add Manual Expense / Bill</h4>
+                </div>
+                <button onclick="closeTxModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form onsubmit="submitManualExpense(event)" class="space-y-3">
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1">Description:</label>
+                    <input type="text" id="manual-desc" required placeholder="e.g. Weekend Trip or Gym Fee" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">Amount (₹):</label>
+                        <input type="number" id="manual-amount" required min="1" step="100" placeholder="5000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">Category:</label>
+                        <select id="manual-cat" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+                            <option value="discretionary">Discretionary Lifestyle</option>
+                            <option value="fixed_obligation">Fixed Recurring Debt/Rent</option>
+                            <option value="utility">Utility & Bills</option>
+                            <option value="essential_living">Essential Living / Grocery</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg space-y-2">
+                    <label class="flex items-center gap-2 text-xs text-slate-300">
+                        <input type="checkbox" id="manual-recurring" class="accent-sky-500" onchange="toggleDueDayInput(this.checked)">
+                        <span>This is a recurring monthly bill</span>
+                    </label>
+
+                    <div id="due-day-wrapper" class="hidden">
+                        <label class="text-[11px] text-slate-400 block mb-1">Due Day of Month (1-31):</label>
+                        <input type="number" id="manual-dueday" min="1" max="31" placeholder="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                        <span class="text-[10px] text-slate-500">Will be tracked by the 7-Day Cash-Flow Guard.</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition">
+                    Add & Trigger Live Recalibration
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Frontend Application Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
